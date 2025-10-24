@@ -1,0 +1,163 @@
+{% extends "layout.html" %}
+
+{% block title %}Estadísticas{% endblock %}
+
+{% block content %}
+<section id="estadisticas">
+    <h2>Estadísticas</h2>
+    
+    <div class="stats-container">
+        
+        <div class="stat-card">
+            <h3>Avisos de adopción por día</h3>
+            <div id="chart-linea" class="chart-container">
+                <p style="text-align: center; padding-top: 20px;">Cargando gráfico...</p>
+            </div>
+            <p>Este gráfico muestra la cantidad de avisos publicados cada día.</p>
+        </div>
+            
+        <div class="stat-card">
+            <h3>Total de avisos por tipo de mascota</h3>
+            <div id="chart-torta" class="chart-container">
+                <p style="text-align: center; padding-top: 20px;">Cargando gráfico...</p>
+            </div>
+            <p>Distribución de avisos según el tipo de mascota: perros vs gatos.</p>
+        </div>
+        
+        <div class="stat-card" style="flex-basis: 100%;"> <h3>Avisos por mes y tipo de mascota</h3>
+            <div id="chart-barras" class="chart-container">
+                <p style="text-align: center; padding-top: 20px;">Cargando gráfico...</p>
+            </div>
+            <p>Comparativa mensual de avisos de adopción para perros y gatos.</p>
+        </div>
+    </div>
+    
+    <div class="text-center">
+        <button data-href="{{ url_for('portada') }}">Volver a la portada</button>
+    </div>
+</section>
+{% endblock %}
+
+
+{% block scripts %}
+<script src="https://code.highcharts.com/highcharts.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    
+    // --- Gráfico 1: Líneas (Avisos por día) ---
+    fetch('/api/stats/avisos_por_dia')
+        .then(response => response.json())
+        .then(data => {
+            Highcharts.chart('chart-linea', {
+                chart: {
+                    type: 'line'
+                },
+                title: {
+                    text: null // Sin título, ya lo pusimos en el <h3>
+                },
+                xAxis: {
+                    type: 'datetime', // El eje X es de fechas
+                    title: {
+                        text: 'Fecha'
+                    }
+                },
+                yAxis: {
+                    title: {
+                        text: 'Cantidad de Avisos'
+                    },
+                    min: 0 // Asegura que el eje Y empiece en 0
+                },
+                series: [{
+                    name: 'Avisos',
+                    data: data // Los datos de nuestra API (ej. [[timestamp, 5], [timestamp, 3]])
+                }],
+                legend: {
+                    enabled: false // No necesitamos leyenda para una sola serie
+                }
+            });
+        })
+        .catch(error => {
+            console.error('Error al cargar gráfico de líneas:', error);
+            document.getElementById('chart-linea').innerHTML = '<p style="color:red;">Error al cargar gráfico.</p>';
+        });
+
+    // --- Gráfico 2: Torta (Total por tipo) ---
+    fetch('/api/stats/total_por_tipo')
+        .then(response => response.json())
+        .then(data => {
+            Highcharts.chart('chart-torta', {
+                chart: {
+                    type: 'pie' // Gráfico de torta
+                },
+                title: {
+                    text: null
+                },
+                tooltip: {
+                    pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b> ({point.y} avisos)'
+                },
+                plotOptions: {
+                    pie: {
+                        allowPointSelect: true,
+                        cursor: 'pointer',
+                        dataLabels: {
+                            enabled: true,
+                            format: '<b>{point.name}</b>: {point.percentage:.1f} %'
+                        }
+                    }
+                },
+                series: [{
+                    name: 'Mascotas',
+                    colorByPoint: true,
+                    data: data // Los datos de nuestra API (ej. [{name: 'Gato', y: 10}, ...])
+                }]
+            });
+        })
+        .catch(error => {
+            console.error('Error al cargar gráfico de torta:', error);
+            document.getElementById('chart-torta').innerHTML = '<p style="color:red;">Error al cargar gráfico.</p>';
+        });
+
+    // --- Gráfico 3: Barras (Avisos por mes y tipo) ---
+    fetch('/api/stats/avisos_por_mes')
+        .then(response => response.json())
+        .then(data => {
+            Highcharts.chart('chart-barras', {
+                chart: {
+                    type: 'bar' // Gráfico de barras
+                },
+                title: {
+                    text: null
+                },
+                xAxis: {
+                    // Eje X: Los meses (ej. ['Ene', 'Feb', ...])
+                    categories: data.categorias,
+                    title: {
+                        text: 'Mes'
+                    }
+                },
+                yAxis: {
+                    min: 0,
+                    title: {
+                        text: 'Cantidad de Avisos'
+                    }
+                },
+                legend: {
+                    reversed: true
+                },
+                plotOptions: {
+                    series: {
+                        stacking: 'normal' // Apila las barras (opcional, pero se ve bien)
+                    }
+                },
+                // Eje Y: Las series (Gatos y Perros)
+                series: data.series // Los datos de nuestra API (ej. [{name: 'Gatos', data: [..]}, ...])
+            });
+        })
+        .catch(error => {
+            console.error('Error al cargar gráfico de barras:', error);
+            document.getElementById('chart-barras').innerHTML = '<p style="color:red;">Error al cargar gráfico.</p>';
+        });
+});
+</script>
+{% endblock %}

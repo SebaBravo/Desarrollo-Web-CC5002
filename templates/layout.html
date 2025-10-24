@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Adopción de Mascotas{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>Bienvenido al Sistema de Gestión de Adopción de Mascotas</h1>
+            <div class="welcome-message">
+                ¡Encuentra un hogar para mascotas necesitadas y ayuda a conectar animales con familias amorosas!
+            </div>
+        </div>
+    </header>
+    
+    <nav>
+        <div class="container">
+            <ul>
+                <li><a href="{{ url_for('portada') }}">Portada</a></li>
+                <li><a href="{{ url_for('agregar_aviso') }}">Agregar Aviso de Adopción</a></li>
+                <li><a href="{{ url_for('listado_avisos') }}">Ver Listado de Adopciones</a></li>
+                <li><a href="{{ url_for('estadisticas') }}">Estadísticas</a></li>
+            </ul>
+        </div>
+    </nav>
+    
+    <div class="container">
+        {% block content %}
+        {% endblock %}
+    </div>
+    
+    <div id="modal-foto" class="photo-modal">
+        <span class="close-button" onclick="cerrarModalFoto()">&times;</span>
+        <img class="photo-modal-content" id="img-modal" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="Vista previa de la foto">
+    </div>
+
+    <script>
+        function mostrarFotoModal(src) {
+            document.getElementById('img-modal').src = src;
+            document.getElementById('modal-foto').style.display = 'flex';
+        }
+        
+        function cerrarModalFoto() {
+            document.getElementById('modal-foto').style.display = 'none';
+        }
+    </script>
+
+    {% block scripts %}
+    {% endblock %}
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Busca CUALQUIER elemento en la página que tenga "data-href"
+            document.querySelectorAll('[data-href]').forEach(element => {
+                // Le agrega el cursor "pointer"
+                element.style.cursor = 'pointer';
+                // Le agrega el evento de click
+                element.addEventListener('click', () => {
+                    window.location.href = element.dataset.href;
+                });
+            });
+        });
+    </script>
+<footer>
+    <div class="container">
+        <p>Proyecto de Adopción CC5002 - Desarrollo de Aplicaciones Web</p>
+        <p>Encuentra a tu próximo mejor amigo. <a href="#">Sobre Nosotros</a> | <a href="#">Donar</a></p>
+    </div>
+</footer>
+</body>
+</html>

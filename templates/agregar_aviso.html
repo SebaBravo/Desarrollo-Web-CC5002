@@ -1,0 +1,422 @@
+{% extends "layout.html" %}
+
+{% block title %}Agregar Aviso de Adopción{% endblock %}
+
+{% block content %}
+<section id="agregar-aviso">
+    <h2>Agregar Aviso de Adopción</h2>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+            {% for category, message in messages %}
+                {% if category == 'error' %}
+                    <div class="error">{{ message }}</div>
+                {% endif %}
+            {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <form id="adoption-form" action="{{ url_for('agregar_aviso') }}" method="POST" enctype="multipart/form-data">
+        
+        <div class="form-section">
+            <h3>¿Dónde?</h3>
+            
+            <div class="form-group">
+                <label for="region">Región *</label>
+                <select id="region" name="region_id" required>
+                    <option value="">Seleccione una región</option>
+                    {% for region in regiones %}
+                        <option value="{{ region.id }}" {% if form_data and form_data.region_id == region.id|string %}selected{% endif %}>
+                            {{ region.nombre }}
+                        </option>
+                    {% endfor %}
+                </select>
+                <div id="region-error" class="error"></div>
+            </div>
+            
+            <div class="form-group">
+                <label for="comuna">Comuna *</label>
+                <select id="comuna" name="comuna" required>
+                    <option value="">Seleccione una región primero</option>
+                </select>
+                <div id="comuna-error" class="error"></div>
+            </div>
+            
+            <div class="form-group">
+                <label for="sector">Sector</label>
+                <input type="text" id="sector" name="sector" maxlength="100" placeholder="Ej: Parque central, Mall plaza..." value="{{ form_data.sector if form_data }}">
+                <div id="sector-error" class="error"></div>
+            </div>
+        </div>
+        
+        <div class="form-section">
+            <h3>¿Contacto de esta publicación?</h3>
+            
+            <div class="form-group">
+                <label for="nombre">Nombre *</label>
+                <input type="text" id="nombre" name="nombre" minlength="3" maxlength="200" required value="{{ form_data.nombre if form_data }}">
+                <div id="nombre-error" class="error"></div>
+            </div>
+            
+            <div class="form-group">
+                <label for="email">Email *</label>
+                <input type="email" id="email" name="email" maxlength="100" required value="{{ form_data.email if form_data }}">
+                <div id="email-error" class="error"></div>
+            </div>
+            
+            <div class="form-group">
+                <label for="celular">Número de celular</label>
+                <input type="tel" id="celular" name="celular" placeholder="+56912345678" pattern="\+569[0-9]{8}" value="{{ form_data.celular if form_data }}">
+                <div id="celular-error" class="error"></div>
+            </div>
+            
+            <div id="contactos-container">
+                <div class="contacto-group">
+                    <div class="form-group">
+                        <label for="contactar-por-0">Contactar por (opcional)</label>
+                        <select id="contactar-por-0" name="contactar-por" onchange="toggleContactField(this)">
+                            <option value="">Seleccione una opción</option>
+                            <option value="whatsapp">WhatsApp</option>
+                            <option value="telegram">Telegram</option>
+                            <option value="X">X (Twitter)</option>
+                            <option value="instagram">Instagram</option>
+                            <option value="tiktok">TikTok</option>
+                            <option value="otra">Otra red social</option>
+                        </select>
+                    </div>
+                    <div class="form-group hidden contact-info-group">
+                        <label for="contact-info-0">ID de contacto o URL</label>
+                        <input type="text" id="contact-info-0" name="contact-info" minlength="4" maxlength="50">
+                        <div class="contact-info-error error"></div>
+                    </div>
+                </div>
+            </div>
+            <button type="button" onclick="agregarOtroContacto()">Agregar otro contacto</button>
+            <div id="contactar-por-error" class="error"></div>
+        </div>
+        
+        <div class="form-section">
+            <h3>¿Qué mascota ofrece en adopción?</h3>
+            
+            <div class="form-group">
+                <label for="tipo">Tipo *</label>
+                <select id="tipo" name="tipo" required>
+                    <option value="">Seleccione un tipo</option>
+                    <option value="perro" {% if form_data and form_data.tipo == 'perro' %}selected{% endif %}>Perro</option>
+                    <option value="gato" {% if form_data and form_data.tipo == 'gato' %}selected{% endif %}>Gato</option>
+                </select>
+                <div id="tipo-error" class="error"></div>
+            </div>
+            
+            <div class="form-group">
+                <label for="cantidad">Cantidad *</label>
+                <input type="number" id="cantidad" name="cantidad" min="1" required value="{{ form_data.cantidad if form_data else 1 }}">
+                <div id="cantidad-error" class="error"></div>
+            </div>
+            
+            <div class="form-group">
+                <label for="edad">Edad *</label>
+                <input type="number" id="edad" name="edad" min="1" required value="{{ form_data.edad if form_data }}">
+                <div id="edad-error" class="error"></div>
+            </div>
+            
+            <div class="form-group">
+                <label for="unidad-edad">Unidad medida edad *</label>
+                <select id="unidad-edad" name="unidad-edad" required>
+                    <option value="">Seleccione una opción</option>
+                    <option value="m" {% if form_data and form_data['unidad-edad'] == 'm' %}selected{% endif %}>Meses</option>
+                    <option value="a" {% if form_data and form_data['unidad-edad'] == 'a' %}selected{% endif %}>Años</option>
+                </select>
+                <div id="unidad-edad-error" class="error"></div>
+            </div>
+            
+            <div class="form-group">
+                <label for="fecha-entrega">Fecha disponible para entrega *</label>
+                <input type="datetime-local" id="fecha-entrega" name="fecha-entrega" required value="{{ form_data['fecha-entrega'] if form_data }}">
+                <div id="fecha-entrega-error" class="error"></div>
+            </div>
+            
+            <div class="form-group">
+                <label for="descripcion">Descripción</label>
+                <textarea id="descripcion" name="descripcion" cols="50" rows="10">{{ form_data.descripcion if form_data }}</textarea>
+            </div>
+            
+            <div class="form-group">
+                <label>Fotos (mínimo 1, máximo 5) *</label>
+                <div id="fotos-container">
+                    <input type="file" name="foto" accept="image/*" required>
+                </div>
+                <button type="button" onclick="agregarOtraFoto()">Agregar otra foto</button>
+                <div id="foto-error" class="error"></div>
+            </div>
+        </div>
+        
+        <button type="submit">Agregar este aviso de adopción</button>
+    </form>
+    
+    <div id="confirmacion-panel" class="confirmation-panel hidden">
+        <h3>¿Estás seguro de enviar este aviso de adopción?</h3>
+        <div class="confirmation-buttons">
+            <button type="button" id="confirm-yes">Sí, estoy seguro</button>
+            <button type="button" id="confirm-no">No, volver</button>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // --- Lógica de formulario Tarea 1 y 2 ---
+
+    let minDateISO; // Variable global para la fecha mínima
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // --- Tarea 1: Pre-llenar fecha de entrega ---
+        const now = new Date();
+        now.setHours(now.getHours() + 3);
+        minDateISO = formatDateTimeLocal(now);
+        
+        const fechaInput = document.getElementById('fecha-entrega');
+        // Solo pre-llenar si no hay datos del servidor (form_data)
+        if (fechaInput && !fechaInput.value) {
+            fechaInput.value = minDateISO;
+        }
+        if(fechaInput) {
+            fechaInput.min = minDateISO; // Establecer fecha mínima
+        }
+
+        // --- Tarea 2: Lógica de Región/Comuna ---
+        document.getElementById('region').addEventListener('change', updateCommunes);
+        // Si hay form_data (error de validación), cargar las comunas de la región ya seleccionada
+        const selectedRegionId = document.getElementById('region').value;
+        if (selectedRegionId) {
+            updateCommunes(true); // El 'true' indica que es una recarga
+        }
+
+        // --- Tarea 1: Lógica de validación de cliente ---
+        const form = document.getElementById('adoption-form');
+        form.addEventListener('submit', function(event) {
+            // 1. Validar con JS (Tarea 1)
+            if (!validarFormularioJS()) {
+                event.preventDefault(); // Detener el envío si JS falla
+                alert('Por favor corrige los errores en el formulario.');
+            } else {
+                // 2. Mostrar panel de confirmación (Tarea 1)
+                event.preventDefault(); // Detener el envío para mostrar el panel
+                mostrarPanelConfirmacion(true);
+            }
+        });
+
+        // 3. Lógica del panel de confirmación (Tarea 1)
+        document.getElementById('confirm-yes').addEventListener('click', function() {
+            // Si el usuario dice "Sí", enviamos el formulario real
+            form.submit();
+        });
+
+        document.getElementById('confirm-no').addEventListener('click', function() {
+            mostrarPanelConfirmacion(false);
+        });
+    });
+
+    function formatDateTimeLocal(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        return `${year}-${month}-${day}T${hours}:${minutes}`;
+    }
+
+    function mostrarPanelConfirmacion(show) {
+        document.getElementById('adoption-form').style.display = show ? 'none' : 'block';
+        document.getElementById('confirmacion-panel').style.display = show ? 'block' : 'none';
+    }
+
+    // --- Tarea 2: API de Comunas ---
+    function updateCommunes(isReload = false) {
+        const regionId = document.getElementById('region').value;
+        const comunaSelect = document.getElementById('comuna');
+        comunaSelect.innerHTML = '<option value="">Cargando...</option>';
+
+        if (!regionId) {
+            comunaSelect.innerHTML = '<option value="">Seleccione una región primero</option>';
+            return;
+        }
+
+        fetch(`/api/comunas/${regionId}`)
+            .then(response => response.json())
+            .then(data => {
+                comunaSelect.innerHTML = '<option value="">Seleccione una comuna</option>';
+                const selectedComunaId = '{{ form_data.comuna if form_data }}';
+                
+                data.comunas.forEach(comuna => {
+                    const option = document.createElement('option');
+                    option.value = comuna.id;
+                    option.textContent = comuna.nombre;
+                    // Si es una recarga y la comuna coincide, la pre-seleccionamos
+                    if (isReload && selectedComunaId == comuna.id) {
+                        option.selected = true;
+                    }
+                    comunaSelect.appendChild(option);
+                });
+            })
+            .catch(error => {
+                console.error('Error cargando comunas:', error);
+                comunaSelect.innerHTML = '<option value="">Error al cargar</option>';
+            });
+    }
+
+    // --- Tarea 1: Lógica de Contacto Múltiple ---
+    function toggleContactField(selectElement) {
+        const infoGroup = selectElement.parentElement.parentElement.querySelector('.contact-info-group');
+        if (selectElement.value) {
+            infoGroup.classList.remove('hidden');
+        } else {
+            infoGroup.classList.add('hidden');
+        }
+    }
+
+    function agregarOtroContacto() {
+        const container = document.getElementById('contactos-container');
+        const count = container.children.length;
+        if (count >= 5) {
+            alert('Solo se permiten 5 métodos de contacto.');
+            return;
+        }
+
+        const newGroup = document.createElement('div');
+        newGroup.className = 'contacto-group';
+        newGroup.innerHTML = `
+            <hr>
+            <div class="form-group">
+                <label for="contactar-por-${count}">Contactar por ${count + 1}</label>
+                <select id="contactar-por-${count}" name="contactar-por" onchange="toggleContactField(this)">
+                    <option value="">Seleccione una opción</option>
+                    <option value="whatsapp">WhatsApp</option>
+                    <option value="telegram">Telegram</option>
+                    <option value="X">X (Twitter)</option>
+                    <option value="instagram">Instagram</option>
+                    <option value="tiktok">TikTok</option>
+                    <option value="otra">Otra</option>
+                </select>
+            </div>
+            <div class="form-group hidden contact-info-group">
+                <label for="contact-info-${count}">ID de contacto o URL</label>
+                <input type="text" id="contact-info-${count}" name="contact-info" minlength="4" maxlength="50">
+                <div class="contact-info-error error"></div>
+            </div>
+            <button type="button" onclick="this.parentElement.remove()">Eliminar</button>
+        `;
+        container.appendChild(newGroup);
+    }
+
+    // --- Tarea 1: Lógica de Fotos Múltiples ---
+    function agregarOtraFoto() {
+        const container = document.getElementById('fotos-container');
+        if (container.children.length >= 5) {
+            alert('Solo se permiten 5 fotos.');
+            return;
+        }
+
+        const newFile = document.createElement('input');
+        newFile.type = 'file';
+        newFile.name = 'foto';
+        newFile.accept = 'image/*';
+        // El primer input es 'required', los siguientes no
+        container.appendChild(newFile);
+    }
+
+    // --- Tarea 1: Validación de Cliente (JS) ---
+    function validarFormularioJS() {
+        let isValid = true;
+        document.querySelectorAll('.error').forEach(el => el.textContent = '');
+
+        // Región
+        if (!document.getElementById('region').value) {
+            document.getElementById('region-error').textContent = 'La región es obligatoria.';
+            isValid = false;
+        }
+        // Comuna
+        if (!document.getElementById('comuna').value) {
+            document.getElementById('comuna-error').textContent = 'La comuna es obligatoria.';
+            isValid = false;
+        }
+        // Nombre
+        const nombre = document.getElementById('nombre');
+        if (nombre.value.length < 3 || nombre.value.length > 200) {
+            document.getElementById('nombre-error').textContent = 'El nombre debe tener entre 3 y 200 caracteres.';
+            isValid = false;
+        }
+        // Email
+        const email = document.getElementById('email');
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email.value) || email.value.length > 100) {
+            document.getElementById('email-error').textContent = 'El formato de email es incorrecto (máx 100).';
+            isValid = false;
+        }
+        // Celular (opcional, pero si existe, validar formato)
+        const celular = document.getElementById('celular');
+        const celularRegex = /^\+569[0-9]{8}$/;
+        if (celular.value && !celularRegex.test(celular.value)) {
+            document.getElementById('celular-error').textContent = 'Formato debe ser +56912345678.';
+            isValid = false;
+        }
+        
+        // Contactos
+        const contactos = document.querySelectorAll('.contacto-group');
+        contactos.forEach(grupo => {
+            const tipo = grupo.querySelector('select[name="contactar-por"]').value;
+            const id = grupo.querySelector('input[name="contact-info"]').value;
+            if (tipo && (id.length < 4 || id.length > 50)) {
+                grupo.querySelector('.contact-info-error').textContent = 'Debe tener entre 4 y 50 caracteres.';
+                isValid = false;
+            }
+        });
+
+        // Tipo
+        if (!document.getElementById('tipo').value) {
+            document.getElementById('tipo-error').textContent = 'El tipo es obligatorio.';
+            isValid = false;
+        }
+        // Cantidad
+        if (document.getElementById('cantidad').value < 1) {
+            document.getElementById('cantidad-error').textContent = 'Debe ser al menos 1.';
+            isValid = false;
+        }
+        // Edad
+        if (document.getElementById('edad').value < 1) {
+            document.getElementById('edad-error').textContent = 'Debe ser al menos 1.';
+            isValid = false;
+        }
+        // Unidad Edad
+        if (!document.getElementById('unidad-edad').value) {
+            document.getElementById('unidad-edad-error').textContent = 'La unidad es obligatoria.';
+            isValid = false;
+        }
+        // Fecha Entrega
+        const fechaEntrega = document.getElementById('fecha-entrega').value;
+        if (!fechaEntrega || new Date(fechaEntrega) < new Date(minDateISO)) {
+            document.getElementById('fecha-entrega-error').textContent = 'La fecha debe ser al menos 3 horas desde ahora.';
+            isValid = false;
+        }
+        
+        // Fotos
+        const fotos = document.querySelectorAll('input[name="foto"]');
+        let fileCount = 0;
+        fotos.forEach(foto => { if (foto.files.length > 0) fileCount++; });
+        
+        if (fileCount === 0) {
+            document.getElementById('foto-error').textContent = 'Debe subir al menos 1 foto.';
+            isValid = false;
+        }
+        if (fotos.length > 5) {
+             document.getElementById('foto-error').textContent = 'No puede agregar más de 5 fotos.';
+            isValid = false;
+        }
+
+        return isValid;
+    }
+</script>
+{% endblock %}

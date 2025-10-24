@@ -1,0 +1,205 @@
+{% extends "layout.html" %}
+
+{% block title %}Detalle del Aviso{% endblock %}
+
+{% block content %}
+<section id="detalle-aviso">
+    <h2>Detalle del Aviso de Adopción</h2>
+    
+    <div class="detail-container">
+        <div class="detail-section">
+            <h3>Información del lugar de entrega</h3>
+            <p><strong>Región:</strong> {{ aviso.comuna.region.nombre }}</p>
+            <p><strong>Comuna:</strong> {{ aviso.comuna.nombre }}</p>
+            <p><strong>Sector:</strong> {{ aviso.sector or 'No especificado' }}</p>
+        </div>
+        
+        <div class="detail-section">
+            <h3>Datos de contacto</h3>
+            <p><strong>Nombre:</strong> {{ aviso.nombre }}</p>
+            <p><strong>Email:</strong> {{ aviso.email }}</p>
+            <p><strong>Celular:</strong> {{ aviso.celular or 'No especificado' }}</p>
+            {% if aviso.contactos %}
+                <p><strong>Contactar por:</strong></p>
+                <ul>
+                {% for contacto in aviso.contactos %}
+                    <li>{{ contacto.nombre.capitalize() }}: {{ contacto.identificador }}</li>
+                {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+        
+        <div class="detail-section">
+            <h3>Información de la mascota</h3>
+            <p><strong>Tipo:</strong> {{ aviso.tipo.capitalize() }}</p>
+            <p><strong>Cantidad:</strong> {{ aviso.cantidad }}</p>
+            {% set unidad = 'meses' if aviso.unidad_medida == 'm' else 'años' %}
+            <p><strong>Edad:</strong> {{ aviso.edad }} {{ unidad }}</p>
+            <p><strong>Fecha disponible para entrega:</strong> {{ aviso.fecha_entrega.strftime('%Y-%m-%d a las %H:%M') }}</p>
+            <p><strong>Descripción:</strong> {{ aviso.descripcion or 'Sin descripción.' }}</p>
+        </div>
+        
+        <div class="detail-section">
+            <h3>Fotos</h3>
+            <div class="photo-container" id="detalle-fotos">
+                {% for foto in aviso.fotos %}
+                    <img 
+                        src="{{ url_for('static', filename='uploads/' + foto.nombre_archivo) }}" 
+                        alt="Foto de {{ aviso.tipo }}"
+                        class="photo-thumb" 
+                        onclick="mostrarFotoModal(this.src)">
+                {% else %}
+                    <p>No hay fotos para este aviso.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div id="seccion-comentarios" class="detail-section">
+            <h3>Comentarios</h3>
+
+            <form id="form-comentario" class="form-section">
+                <h4>Agregar un comentario</h4>
+                
+                <div id="comentario-mensaje" class="form-group"></div>
+
+                <div class="form-group">
+                    <label for="comentario-nombre">Nombre *</label>
+                    <input type="text" id="comentario-nombre" required minlength="3" maxlength="80">
+                    <div id="comentario-nombre-error" class="error"></div>
+                </div>
+                <div class="form-group">
+                    <label for="comentario-texto">Comentario *</label>
+                    <textarea id="comentario-texto" rows="4" cols="50" required minlength="5" maxlength="300"></textarea>
+                    <div id="comentario-texto-error" class="error"></div>
+                </div>
+                <button type="submit">Agregar comentario</button>
+            </form>
+
+            <h4>Comentarios existentes</h4>
+            <div id="lista-comentarios">
+                <p>Cargando comentarios...</p>
+            </div>
+        </div>
+        <div class="text-center mt-20">
+            <button data-href="{{ url_for('listado_avisos') }}">Volver al listado</button>
+            <button data-href="{{ url_for('portada') }}">Volver a la portada</button>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+
+{% block scripts %}
+<script>
+    // Esperar a que todo el HTML esté cargado
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        // --- Tarea 3: Variables ---
+        const avisoId = {{ aviso.id }}; // Obtener el ID del aviso desde Flask
+        const formComentario = document.getElementById('form-comentario');
+        const listaComentarios = document.getElementById('lista-comentarios');
+        const mensajeDiv = document.getElementById('comentario-mensaje');
+        const nombreError = document.getElementById('comentario-nombre-error');
+        const textoError = document.getElementById('comentario-texto-error');
+        const nombreInput = document.getElementById('comentario-nombre');
+        const textoInput = document.getElementById('comentario-texto');
+        
+        // --- Tarea 3: Función para Cargar Comentarios (GET) ---
+        function cargarComentarios() {
+            fetch(`/api/comentarios/${avisoId}`)
+                .then(response => response.json())
+                .then(comentarios => {
+                    listaComentarios.innerHTML = ''; // Limpiar "Cargando..."
+                    
+                    if (comentarios.length === 0) {
+                        listaComentarios.innerHTML = '<p>No hay comentarios para este aviso. ¡Sé el primero!</p>';
+                        return;
+                    }
+                    
+                    // Crear HTML para cada comentario
+                    comentarios.forEach(comentario => {
+                        const div = document.createElement('div');
+                        div.className = 'comentario-item'; // (Puedes añadir estilos para esto)
+                        div.innerHTML = `
+                            <p><strong>${comentario.nombre}</strong> <span style="font-size: 0.8em; color: #555;">(${comentario.fecha})</span></p>
+                            <p>${comentario.texto}</p>
+                            <hr>
+                        `;
+                        listaComentarios.appendChild(div);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error al cargar comentarios:', error);
+                    listaComentarios.innerHTML = '<p>Error al cargar comentarios.</p>';
+                });
+        }
+        
+        // --- Tarea 3: Función para Enviar Comentario (POST) ---
+        formComentario.addEventListener('submit', function(event) {
+            event.preventDefault(); // ¡Evitar que la página se recargue!
+            
+            // Limpiar errores previos
+            nombreError.textContent = '';
+            textoError.textContent = '';
+            mensajeDiv.innerHTML = '';
+
+            // 1. Validación del lado del cliente (Tarea 3)
+            let esValido = true;
+            const nombre = nombreInput.value;
+            const texto = textoInput.value;
+            
+            if (nombre.length < 3 || nombre.length > 80) {
+                nombreError.textContent = 'El nombre debe tener entre 3 y 80 caracteres.';
+                esValido = false;
+            }
+            if (texto.length < 5) {
+                textoError.textContent = 'El comentario debe tener al menos 5 caracteres.';
+                esValido = false;
+            }
+            
+            if (!esValido) {
+                return; // Detener si la validación del cliente falla
+            }
+
+            // 2. Enviar datos con Fetch (POST)
+            fetch(`/api/comentarios/${avisoId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    nombre: nombre,
+                    texto: texto
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.errors) {
+                    // 3. Manejar errores de validación del SERVIDOR (Tarea 3)
+                    mensajeDiv.innerHTML = '<div class="error">Error de validación del servidor.</div>';
+                    data.errors.forEach(error => {
+                        if (error.includes('nombre')) nombreError.textContent = error;
+                        if (error.includes('comentario')) textoError.textContent = error;
+                    });
+                } else if (data.error) {
+                    // 4. Manejar otros errores (ej. 500)
+                    mensajeDiv.innerHTML = `<div class="error">${data.error}</div>`;
+                } else {
+                    // 5. ¡Éxito!
+                    mensajeDiv.innerHTML = '<div class="success">Comentario agregado con éxito.</div>';
+                    formComentario.reset(); // Limpiar el formulario
+                    cargarComentarios(); // Volver a cargar la lista para mostrar el nuevo
+                }
+            })
+            .catch(error => {
+                console.error('Error al enviar comentario:', error);
+                mensajeDiv.innerHTML = '<div class="error">Ocurrió un error inesperado.</div>';
+            });
+        });
+        
+        // --- Tarea 3: Carga inicial ---
+        // Llamar a la función al cargar la página
+        cargarComentarios();
+    });
+</script>
+{% endblock %}
