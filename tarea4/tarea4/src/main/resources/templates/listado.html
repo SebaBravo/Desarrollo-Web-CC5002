@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Listado de Avisos - Tarea 4</title>
+    
+    
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f7f6; 
+            color: #333;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+        h1 {
+            color: #007bff;
+            font-size: 2.5em;
+            margin-bottom: 5px;
+            text-align: center;
+        }
+        h2 {
+            color: #555;
+            font-size: 1.5em;
+            margin-top: 0;
+            margin-bottom: 5px;
+            text-align: center;
+        }
+        h3 {
+            color: #777;
+            font-size: 1em;
+            margin-top: 0;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 20px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+        th, td {
+            border: 1px solid #e0e0e0;
+            padding: 12px 15px;
+            text-align: left;
+            vertical-align: middle;
+        }
+        th {
+            background-color: #007bff;
+            color: #ffffff;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.9em;
+        }
+        tr:nth-child(even) {
+            background-color: #f8f8f8;
+        }
+        tr:hover {
+            background-color: #eef7ff;
+        }
+        .btn-evaluar {
+            background-color: #ffc107;
+            color: #333;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.3s ease;
+        }
+        .btn-evaluar:hover {
+            background-color: #e0a800;
+        }
+        .nota-cell {
+            font-weight: 700;
+            width: 60px;
+            text-align: center;
+            background-color: #e9ecef;
+            border-radius: 4px;
+        }
+
+       
+        .modal {
+            display: none; 
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.6);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 30px;
+            border: 1px solid #888;
+            border-radius: 10px;
+            width: 80%;
+            max-width: 400px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            position: relative;
+            text-align: center;
+        }
+        .close-button {
+            color: #aaa;
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close-button:hover,
+        .close-button:focus {
+            color: #000;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .modal-content h3 {
+            color: #007bff;
+            margin-bottom: 20px;
+        }
+        .modal-content label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 500;
+            font-size: 1.1em;
+        }
+        .modal-content input[type="number"] {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1.1em;
+            text-align: center;
+        }
+        .modal-content button {
+            background-color: #28a745;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1.1em;
+            transition: background-color 0.3s ease;
+        }
+        .modal-content button:hover {
+            background-color: #218838;
+        }
+        .alert-message {
+            background-color: #e0f7fa;
+            color: #0056b3;
+            padding: 10px;
+            border-left: 5px solid #007bff;
+            margin-top: 15px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            display: none;
+        }
+        .alert-message.show {
+            display: block;
+        }
+
+      
+        .toast {
+            visibility: hidden;
+            min-width: 250px;
+            background-color: #28a745;
+            color: white;
+            text-align: center;
+            border-radius: 5px;
+            padding: 16px;
+            position: fixed; 
+            z-index: 2000; 
+            left: 50%;
+            transform: translateX(-50%);
+            bottom: 30px; 
+            font-size: 1.1em;
+            transition: visibility 0.5s, opacity 0.5s linear;
+            opacity: 0;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        
+        
+        .toast.show {
+            visibility: visible;
+            opacity: 1;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Listado de Avisos</h1>
+        <h2>Tarea 4 - CC5002</h2>
+        <h3 th:text="'Hecho por ' + ${autor}">Hecho por Sebastian Bravo</h3>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Fecha publicación</th>
+                    <th>Sector</th>
+                    <th>Cantidad Tipo Edad</th>
+                    <th>Comuna</th>
+                    <th>Nota</th>
+                    <th>Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="aviso : ${avisos}" th:id="'fila-' + ${aviso.id}">
+                    <td th:text="${aviso.id}">1</td>
+                    <td th:text="${#temporals.format(aviso.fechaIngreso, 'yyyy-MM-dd')}">2025-06-02</td>
+                    <td th:text="${aviso.sector}">Beauchef 859</td>
+                    <td th:text="${aviso.cantidad + ' ' + aviso.tipo + ' ' + aviso.edad + ' ' + (aviso.unidadMedida == 'a' ? 'años' : 'meses')}">
+                        1 gato 2 meses
+                    </td>
+                    <td th:text="${aviso.comuna.nombre}">Santiago</td>
+                    <td class="nota-cell" th:text="${aviso.getPromedioNotas()}">-</td> 
+                    <td>
+                        <button class="btn-evaluar" 
+                                th:data-aviso-id="${aviso.id}"
+                                onclick="openModal(this)"> 
+                            evaluar
+                        </button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div id="evaluationModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeModal()">&times;</span>
+            <h3>Evaluar Aviso</h3>
+            <p>Aviso ID: <span id="modalAvisoId"></span></p>
+            <label for="inputNota">Ingrese una nota (1-7):</label>
+            <input type="number" id="inputNota" min="1" max="7" value="4">
+            <div id="modalAlert" class="alert-message"></div>
+            <button onclick="submitEvaluation()">Guardar Nota</button>
+        </div>
+    </div>
+
+    <div id="toastNotification" class="toast">
+        <span id="toastMessage"></span>
+    </div>
+
+    <script>
+        let currentAvisoId = null;
+        let toastTimer; 
+
+        
+        function showToast(message) {
+            const toast = document.getElementById('toastNotification');
+            const toastMessage = document.getElementById('toastMessage');
+            
+            toastMessage.textContent = message;
+            
+          
+            if (toastTimer) {
+                clearTimeout(toastTimer);
+            }
+            
+            toast.classList.add('show');
+            
+            
+            toastTimer = setTimeout(function() {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        function openModal(boton) {
+            currentAvisoId = boton.dataset.avisoId;
+            document.getElementById('modalAvisoId').textContent = currentAvisoId;
+            document.getElementById('inputNota').value = 4;
+            document.getElementById('modalAlert').classList.remove('show');
+            document.getElementById('evaluationModal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('evaluationModal').style.display = 'none';
+        }
+
+        function submitEvaluation() {
+            const notaInput = document.getElementById('inputNota');
+            let nota = parseInt(notaInput.value, 10);
+            const modalAlert = document.getElementById('modalAlert');
+
+            if (isNaN(nota) || nota < 1 || nota > 7) {
+                modalAlert.textContent = "Error: La nota debe ser un número entre 1 y 7.";
+                modalAlert.classList.add('show');
+                return;
+            }
+
+            modalAlert.classList.remove('show');
+
+            fetch(`/api/evaluar/${currentAvisoId}/${nota}`, {
+                method: 'POST'
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.text().then(text => { throw new Error(text || 'Error del servidor') });
+                }
+                return response.text();
+            })
+            .then(nuevoPromedio => {
+                const fila = document.getElementById('fila-' + currentAvisoId);
+                if (fila) {
+                    const celdaNota = fila.querySelector('.nota-cell');
+                    if (celdaNota) {
+                        celdaNota.textContent = nuevoPromedio;
+                    }
+                }
+                closeModal();
+                
+                
+                showToast("¡Evaluación guardada con éxito!");
+            })
+            .catch(error => {
+                console.error('Error al evaluar:', error);
+                modalAlert.textContent = "Error al enviar la evaluación: " + error.message;
+                modalAlert.classList.add('show');
+            });
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('evaluationModal');
+            if (event.target == modal) {
+                closeModal();
+            }
+        }
+        
+        document.addEventListener('keydown', function(event) {
+            if (event.key === "Escape") {
+                closeModal();
+            }
+        });
+    </script>
+
+</body>
+</html>
