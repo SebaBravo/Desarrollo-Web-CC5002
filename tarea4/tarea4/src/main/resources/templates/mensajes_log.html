@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Logs del Sistema - Tarea 5</title>
+    <link rel="stylesheet" th:href="@{/style.css}">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>🔐 Logs de Auditoría</h1>
+            <p>Registro inmutable de acciones administrativas</p>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="toolbar" style="justify-content: space-between; align-items: center;">
+            <a th:href="@{/t5-admin-fotos}" class="btn btn-primary">⬅ Volver a la Galería</a>
+            <span style="color: #777; font-size: 0.9rem;">Total registros: <strong th:text="${logs.size()}">0</strong></span>
+        </div>
+
+        <div style="overflow-x: auto; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            <table class="styled-table">
+                <thead>
+                    <tr>
+                        <th style="width: 10%;">ID</th>
+                        <th style="width: 25%;">Fecha y Hora</th>
+                        <th>Detalle del Evento</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="log : ${logs}">
+                        <td><span style="background: #eee; padding: 4px 8px; border-radius: 4px; font-weight: bold;" th:text="${'#' + log.id}">#1</span></td>
+                        <td th:text="${#temporals.format(log.fecha, 'dd-MM-yyyy HH:mm:ss')}" style="color: #555;">Fecha</td>
+                        <td th:text="${log.mensaje}">Mensaje</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div th:if="${#lists.isEmpty(logs)}" style="text-align: center; margin-top: 40px; color: #999;">
+            <p>Aún no hay registros de actividad en el sistema.</p>
+        </div>
+    </div>
+</body>
+</html>

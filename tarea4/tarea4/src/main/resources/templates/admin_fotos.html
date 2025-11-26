@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administrar Fotos - Tarea 5</title>
+    <link rel="stylesheet" th:href="@{/style.css}"> </head>
+<body>
+    <header>
+        <div class="container">
+            <h1>📸 Galería de Administración</h1>
+            <p>Panel de control para usuario: <strong>cc5002</strong></p>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="toolbar">
+            <a th:href="@{/mensajes-log}" class="btn btn-primary">📜 Ver Logs de Auditoría</a>
+            <form th:action="@{/logout}" method="post" style="display:inline;">
+                <button type="submit" class="btn btn-secondary">Cerrar Sesión</button>
+            </form>
+        </div>
+
+        <div th:if="${success}" class="flash-messages"><div class="success" th:text="${success}"></div></div>
+        <div th:if="${error}" class="flash-messages"><div class="error" th:text="${error}"></div></div>
+
+        <div class="photo-grid">
+            <div class="photo-card" th:each="foto : ${fotos}">
+                <div class="card-img-container">
+                    <img th:src="@{'/uploads/' + ${foto.nombreArchivo}}" alt="Mascota">
+                </div>
+                
+                <div class="card-body">
+                    <div class="card-info">
+                        <h3 th:text="${foto.aviso.comuna.nombre}">Comuna</h3>
+                        <div class="card-meta">
+                            <span>📅 <span th:text="${#temporals.format(foto.aviso.fechaIngreso, 'dd/MM/yyyy')}">Fecha</span></span>
+                        </div>
+                        <p>📧 <span th:text="${foto.aviso.email}">Email</span></p>
+                    </div>
+                    
+                    <div class="card-actions">
+                        <button class="btn btn-delete-card" 
+                                th:data-id="${foto.id}" 
+                                onclick="abrirModal(this.getAttribute('data-id'))">
+                            🗑️ Eliminar Foto
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div th:if="${#lists.isEmpty(fotos)}" style="text-align: center; padding: 50px; color: #777;">
+            <h2>📭</h2>
+            <p>No hay fotos activas en la galería.</p>
+        </div>
+    </div>
+
+    <div id="modalEliminar" class="modal">
+        <div class="modal-content">
+            <h3>⚠️ Confirmar Eliminación</h3>
+            <p>Estás a punto de eliminar esta foto. Esta acción dejará un registro de auditoría.</p>
+            
+            <form th:action="@{/t5-admin-fotos/eliminar}" method="post">
+                <input type="hidden" id="idFotoInput" name="idFoto">
+                
+                <div style="text-align: left; margin-bottom: 5px; font-weight: bold; font-size: 0.9rem;">Motivo (Obligatorio):</div>
+                <input type="text" name="motivo" required minlength="5" maxlength="200" placeholder="Ej: Foto duplicada o inapropiada..." autofocus>
+                
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="cerrarModal()">Cancelar</button>
+                    <button type="submit" class="btn btn-danger">Confirmar y Eliminar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function abrirModal(idFoto) {
+            document.getElementById('idFotoInput').value = idFoto;
+            const modal = document.getElementById('modalEliminar');
+            modal.style.display = 'flex';
+            // Enfocar el input automáticamente
+            setTimeout(() => modal.querySelector('input[name="motivo"]').focus(), 100);
+        }
+        
+        function cerrarModal() {
+            document.getElementById('modalEliminar').style.display = 'none';
+        }
+
+        // Cerrar con tecla ESC
+        document.addEventListener('keydown', function(event) {
+            if (event.key === "Escape") cerrarModal();
+        });
+
+        // Cerrar al hacer clic fuera del modal
+        window.onclick = function(event) {
+            const modal = document.getElementById('modalEliminar');
+            if (event.target == modal) cerrarModal();
+        }
+    </script>
+</body>
+</html>

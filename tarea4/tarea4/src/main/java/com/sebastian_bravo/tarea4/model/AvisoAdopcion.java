@@ -60,29 +60,37 @@ public class AvisoAdopcion {
     @OneToMany(mappedBy = "aviso")
     private List<Nota> notas;
 
-   
+    @OneToMany(mappedBy = "aviso")
+    private List<Comentario> comentarios;
+
+    // --- GETTERS (Esto es lo que faltaba para Thymeleaf) ---
     public Integer getId() { return id; }
     public LocalDateTime getFechaIngreso() { return fechaIngreso; }
     public String getSector() { return sector; }
     public String getNombreContacto() { return nombreContacto; }
+    public String getEmail() { return email; } // ¡CRUCIAL!
+    public String getCelular() { return celular; }
     public TipoMascota getTipo() { return tipo; }
     public Integer getCantidad() { return cantidad; }
     public Integer getEdad() { return edad; }
     public UnidadMedida getUnidadMedida() { return unidadMedida; }
-    public Comuna getComuna() { return comuna; }
+    public LocalDateTime getFechaEntrega() { return fechaEntrega; }
+    public String getDescripcion() { return descripcion; }
+    public Comuna getComuna() { return comuna; } // ¡CRUCIAL!
+    public List<Foto> getFotos() { return fotos; }
+    public List<ContactarPor> getContactos() { return contactos; }
     public List<Nota> getNotas() { return notas; }
+    public List<Comentario> getComentarios() { return comentarios; }
 
-   
+    // Lógica de negocio para promedio
     public String getPromedioNotas() {
         if (this.notas == null || this.notas.isEmpty()) {
             return "-"; 
         }
-        
         double promedio = this.notas.stream()
                                 .mapToInt(Nota::getNota)
                                 .average()
                                 .orElse(0.0);
-
         return String.format("%.1f", promedio);
     }
 }
